@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+        <title>Event</title>
+        <style>
+
+            .user {
+                display: block;
+                float: right;
+            }
+
+            .eventinfo {
+                display: flex;
+                background-color: skyblue;
+            }
+        </style>
+        <script src="{{ url_for('static', filename='js/eventplannerJSfile.js')}}"></script>
+        <script>
+            $.cookie('mytoken');
+            //get event information 
+            $(function(){
+                event_get();
+                event_get2();
+                $('#location-update').on('click', location_update);
+            });
+
+            function event_get() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/event/{{eventcode}}/info1',
+                    data: {},
+                    success: function(response){
+                        console.log(response)
+                        let eventname = response["eventname"]
+                        $('#eventname').append(eventname);
+                        /*start end 다시 따로
+                        $('#start').append(start);
+                        $('#end').append(end);
+                        */
+                    }
+                })
+            }
+
+            function event_get2(){
+                $.ajax({
+                    type: 'GET',
+                    url: '/event/{{eventcode}}/info2',
+                    data: {},
+                    success: function(response){
+                        console.log(response)
+                        participants_list = response["participants"]
+                        let location = response["location"]
+                        let checklist = response["checklist"]
+            
+                        for (let j=0;j<participants_list.length;j++){
+                            username_get(participants_list[j]).then(function(username){
+                                $('#participants_list').append(username['username']);
+                                if( j < (participants_list.length-1)){
+                                    $('#participants_list').append(', ')
+                                }
+                            })
+                        }
+            
+                        $('#location').append(location);
+            
+                        for (let i=0;i<checklist.length;i++){
+                            let item = checklist[i]
+                            let temp_html = `<li>${item}</li>`;
+                            $('#check_list').append(temp_html);
+                        }
+                    }
+                })
+            
+            }
+
+            function checklist_post() {
+                let item = $('#item').val()
+                $.ajax({
+                    type: 'POST',
+                    url: '/event/{{eventcode}}/checklist',
+                    data: {item_give : item},
+                    success: function(response){
+                        console.log(response)
+                        window.location.reload()
+                    }
+                })
+            }
+
+            function location_update(){
+                $.ajax({
+                    type: 'PUT',
+                    url: '/event/{{eventcode}}/location',
+                    data: {location_give:$('#location_give').val()},
+                    success: function(response){
+                        console.log(response)
+                        window.location.reload()
+                    }
+                })
+            }
+
+            function EventStartEnd_update(){
+                let timezone_form = $('#timezone_give option:selected').val()
+                let start_form = $('#start_give').val()
+                let end_form = $('#end_give').val()
+                //if one of them is blank -> error
+                $.ajax({
+                    type: 'PUT',
+                    url: '/event/{{eventcode}}/time',
+                    data: {timezone_give:timezone_form, start_give:start_form,end_give:end_form},
+                    success: function(response){
+                        console.log(response)
+                        google_calendar_create();
+                        window.location.reload()
+                    }
+                })
+            }
+
+            function event_delete(){
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/event/{{eventcode}}',
+                    data: {},
+                    success: function(response){
+                        console.log(response)
+                        google_calendar_delete();
+                    }
+                })
+            }
+
+            function checklist_delete(){
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/event/{{eventcode}}/checklist',
+                    data: {},
+                    success: function(response){
+                        console.log(response)
+                    }
+                })
+            }
+
+            function google_calendar_create(){
+                //when create when update
+                $.ajax({
+                    type: 'POST',
+                    url: '/event/{{eventcode}}/calendar',
+                    data: {eventcode_give: '{{eventcode}}'},
+                    success: function(response){
+                        console.log(response)
+                    }
+                })
+            }
+            //access error
+            //The OAuth client was deleted.
+
+            function google_calendar_update(){
+                //event date/time/timezone change
+                //location update
+                //user leave event
+                $.ajax({
+                    type: 'PUT',
+                    url: '/event/{{eventcode}}/calendar',
+                    data: {},
+                    success: function(response){}
+                })
+            }
+
+            function google_calendar_delete(){
+                //event delete
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/event/{{eventcode}}/calendar',
+                    data: {},
+                    success: function(response){}
+                })
+            }
+
+        </script>
+    </head>
+    <body>
+        <div class="user">
+            <button onclick="logout()">Sign Out</button>
+        </div>
+        <br>
+        <div class="eventinfo">
+            <span id="eventname"></span>
+            <span>{{eventcode}}</span>
+        </div>
+        <div>
+            <button onclick='user_leave()'>Event Delete</button>
+        </div>
+        <div>
+            <span>Participants: </span>
+            <span id='participants_list'></span>
+            <p></p>
+        </div>
+        
+        <div>
+            <span>Location: </span>
+            <span id="location"></span>
+            <input type='text' placeholder='location' aria-label='location' id='location_give'>
+            <button id='location-update'>save</button>
+            <p>google map api</p>
+        </div>
+        <br>
+
+        <div>
+            <fieldset>
+                <legend>Event Start/End Date and Time</legend>
+                Time Zone: <form>
+                                <select id="timezone_give" name="Time Zone">
+                                    <option value="Asia/Seoul">Asia/Seoul</option>
+                                    <option value="Asia/Tokyo">Asia/Tokyo</option>
+                                    <option value="America/New_York">America/New_York </option>
+                                    <option value="America/Los_Angeles">America/Los_Angeles</option>
+                                </select>
+                            </form>
+                Start: <input id="start_give" type="datetime-local" required><br>
+                End: <input id="end_give" type="datetime-local" size=30 required><br>
+                <button type="submit" onclick="EventStartEnd_update()">Google Calendar</button>
+            </fieldset>
+        </div>
+
+        <div>
+            <p>checklist</p>
+            <input type='text' placeholder='checklist' aria-label='checklist' aria-describedby='button-addon2' id='item'>
+            <button type='button' onclick='checklist_post()'>Add</button>
+            <ul id='check_list'></ul>
+        </div>
+        <div> 
+            <p>google drive</p>
+            <span>Link</span>
+        </div>
+        <div>
+            <button type='button' id='userpage-load'>User Page</button>
+        </div>
+    </body>
+</html>
+

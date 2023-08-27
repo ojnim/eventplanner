@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
+        <title>User page</title>
+        <style>
+
+            .user {
+                display: flex;
+                justify-content: flex-end;
+            }
+            .page {
+                display:flex;
+                justify-content: flex-evenly;
+            }
+            .eventpage {
+                width: 50%;
+                margin: 10px;
+                padding: 10px;
+            }
+            .box {
+                background-color: skyblue;
+                height: 100px;
+            }
+            .eventlist {
+                background-color: skyblue;
+                text-align: center;
+                width: 50%;
+                margin: 10px;
+            }
+        </style>
+        <script src="{{ url_for('static', filename='js/eventplannerJSfile.js')}}"></script>
+        <script>
+            $.cookie('mytoken');
+
+            $(function(){
+                user_get();
+                $('#create-button').on('click', createevent);
+                $('#enter-button').on('click', enterevent);
+                $('#logout-button').on('click', logout);
+            });
+
+            function user_get(){
+                $.ajax({
+                    type: "GET",
+                    url: '/user/{{userid}}/eventlist',
+                    data: {},
+                    success: function(response){
+                        if (response["result"]=="success"){
+                            console.log(response)
+                            let eventlist = response['eventlist'];
+                            for (let i = 0; i < eventlist.length; i++){
+                                event_detail(eventlist[i]).then(function (detailed_info) {
+                                    let eventcode = eventlist[i];
+                                    let name = detailed_info["eventname"];
+                                    let start = detailed_info["start"];
+                                    let end = detailed_info["end"];
+                                    let temp_html = `<tr>
+                                                        <th scope="row">${name}</th>
+                                                        <td>${eventcode}</td>
+                                                        <td>${start}</td>
+                                                        <td>${end}</td>
+                                                        <td>
+                                                            <button type="button" onclick="location.href='/event/${eventcode}'">view</button>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" onclick="leave_event('${eventcode}')">leave</button>
+                                                        </td>
+                                                    </tr>`;
+                                    $('#eventlist-box').append(temp_html);
+                                });
+                            }
+                        }
+                    },
+                    error: function(error){
+                        console.error("Error getting user information: ", error)
+                    }
+                })
+            }
+
+            function EnterEventandUpdateParticipants(eventcode){
+                $.ajax({
+                    type:'PUT',
+                    url:'/user/{{userid}}/eventsparticipated',
+                    data:{eventcode_give:eventcode},
+                    success: function(response){
+                        if(response["result"]=="success"){
+                            console.log(response)
+                            $.ajax({
+                                type:'PUT',
+                                url: '/event/' + eventcode + '/participantslist', 
+                                data: {userid_give:'{{userid}}'},
+                                success: function(response){
+                                    if(response["result"]=="success"){
+                                        console.log(response)
+                                        window.location.href = '/event/' + eventcode
+                                    }
+                                },
+                                error: function(error){
+                                    console.error("Error updating event participants: ", error)
+                                }
+                            })
+                        }
+                    },
+                    error: function(error){
+                        console.error("Error entering event: ", error)
+                    }
+                })
+            }
+
+            function enterevent(){
+                const eventcode = $('#event-code').val();
+                $.ajax({
+                    type:'PUT',
+                    url:'/user/{{userid}}/eventsparticipated',
+                    data:{eventcode_give:eventcode},
+                    success: function(response){
+                        if(response["result"]=="success"){
+                            console.log(response)
+                            $.ajax({
+                                type:'PUT',
+                                url: '/event/' + eventcode + '/participantslist', 
+                                data: {userid_give:'{{userid}}'},
+                                success: function(response){
+                                    if(response["result"]=="success"){
+                                        console.log(response)
+                                        window.location.href = '/event/' + eventcode
+                                    }
+                                },
+                                error: function(error){
+                                    console.error("Error updating event participants: ", error)
+                                }
+                            })
+                        }
+                    },
+                    error: function(error){
+                        console.error("Error entering event: ", error)
+                    }
+                })
+            }
+            
+            function leave_event(eventcode){
+                $.ajax({
+                    type:'DELETE',
+                    url:'/user/{{userid}}/event',
+                    data: {eventcode_give:eventcode},
+                    success: function(response){
+                        if(response['result']=='success'){
+                            console.log(response)
+                            $.ajax({
+                                type:'DELETE',
+                                url:'/event/'+eventcode+'/participantslist',
+                                data: {userid_give:'{{userid}}'},
+                                success: function(response){
+                                    if(response['result']=='success'){
+                                        console.log(response)
+                                        window.location.reload();
+                                    }
+                                },
+                                error: function(error){
+                                    console.error("Error deleting event participant: ", error)
+                                }
+                            })
+                        }
+                    },
+                    error: function(error){
+                        console.error("Error leaving event: ", error)
+                    }
+            
+                })
+            }
+            
+        </script>
+    </head>
+    
+    <body>
+       <div class="user">
+           <span>{{username}}</span>
+           <button id='logout-button'>Sign Out</button>
+       </div>
+       <br>
+       <div>
+            <h2>Event Planner</h2>
+       </div>
+       <div class='page'>
+            <div class="eventpage">
+                <div class="box">
+                    <h4>Create New Event</h4>
+                    <input id="event-name" type="text" placeholder='Event Name'>
+                    <button id="create-button">Create</button>
+                </div>
+                <div class="box">
+                    <h4>Enter Existing Event</h4>
+                    <input id="event-code" type="text" placeholder='Event Code'>
+                    <button id="enter-button">Enter</button>
+                </div>
+            </div>
+            <br>
+            <div class="eventlist">
+                <h4>Event List</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Event Name</th>
+                            <th scope="col">Event Code</th>
+                            <th scope="col">Start</th>
+                            <th scope="col">End</th>
+                            <th scope="col">view</th>
+                            <th scope="col">delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventlist-box"></tbody>
+                </table>
+            </div>     
+       </div>
+    </body>
+</html>
+
+
