@@ -1,1 +1,25 @@
-<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css" />
+
+/*user page*/
+.user {
+    display: flex;
+    justify-content: flex-end;
+}
+.page {
+    display:flex;
+    justify-content: flex-evenly;
+}
+.eventpage {
+    width: 50%;
+    margin: 10px;
+    padding: 10px;
+}
+.box {
+    background-color: skyblue;
+    height: 100px;
+}
+.eventlist {
+    background-color: skyblue;
+    text-align: center;
+    width: 50%;
+    margin: 10px;
+}

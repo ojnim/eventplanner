@@ -14,9 +14,11 @@
 
         │   ├──css
 
+        │      └──eventplannerCSSfile.css
+
         │   └──js
 
-        │       └──eventplannerJSfile.js
+        │      └──eventplannerJSfile.js
 
         └──templates 
 
