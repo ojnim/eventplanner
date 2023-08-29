@@ -6,7 +6,6 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"></script>
         <title>Event</title>
         <style>
-
             .user {
                 display: block;
                 float: right;
@@ -20,6 +19,7 @@
         <script src="{{ url_for('static', filename='js/eventplannerJSfile.js')}}"></script>
         <script>
             $.cookie('mytoken');
+
             //get event information 
             $(function(){
                 event_get();
@@ -35,11 +35,11 @@
                     success: function(response){
                         console.log(response)
                         let eventname = response["eventname"]
+                        let eventstart = response["start"]
+                        let eventend = response["end"]
                         $('#eventname').append(eventname);
-                        /*start end 다시 따로
-                        $('#start').append(start);
-                        $('#end').append(end);
-                        */
+                        $('#eventstart').append(eventstart);
+                        $('#eventend').append(eventend);
                     }
                 })
             }
@@ -54,6 +54,7 @@
                         participants_list = response["participants"]
                         let location = response["location"]
                         let checklist = response["checklist"]
+                        let eventtimezone = response["eventtimezone"]
             
                         for (let j=0;j<participants_list.length;j++){
                             username_get(participants_list[j]).then(function(username){
@@ -65,6 +66,7 @@
                         }
             
                         $('#location').append(location);
+                        $('#eventtimezone').append(eventtimezone);
             
                         for (let i=0;i<checklist.length;i++){
                             let item = checklist[i]
@@ -113,7 +115,6 @@
                     success: function(response){
                         console.log(response)
                         google_calendar_create();
-                        window.location.reload()
                     }
                 })
             }
@@ -152,8 +153,6 @@
                     }
                 })
             }
-            //access error
-            //The OAuth client was deleted.
 
             function google_calendar_update(){
                 //event date/time/timezone change
@@ -202,14 +201,14 @@
             <span id="location"></span>
             <input type='text' placeholder='location' aria-label='location' id='location_give'>
             <button id='location-update'>save</button>
-            <p>google map api</p>
         </div>
         <br>
 
         <div>
             <fieldset>
                 <legend>Event Start/End Date and Time</legend>
-                Time Zone: <form>
+                Time Zone: <span id="eventtimezone"></span>
+                            <form>
                                 <select id="timezone_give" name="Time Zone">
                                     <option value="Asia/Seoul">Asia/Seoul</option>
                                     <option value="Asia/Tokyo">Asia/Tokyo</option>
@@ -217,8 +216,10 @@
                                     <option value="America/Los_Angeles">America/Los_Angeles</option>
                                 </select>
                             </form>
-                Start: <input id="start_give" type="datetime-local" required><br>
-                End: <input id="end_give" type="datetime-local" size=30 required><br>
+                Start: <span id="eventstart"></span>
+                    <input id="start_give" type="datetime-local" required><br>
+                End: <span id="eventend"></span>
+                <input id="end_give" type="datetime-local" size=30 required><br>
                 <button type="submit" onclick="EventStartEnd_update()">Google Calendar</button>
             </fieldset>
         </div>
@@ -228,10 +229,6 @@
             <input type='text' placeholder='checklist' aria-label='checklist' aria-describedby='button-addon2' id='item'>
             <button type='button' onclick='checklist_post()'>Add</button>
             <ul id='check_list'></ul>
-        </div>
-        <div> 
-            <p>google drive</p>
-            <span>Link</span>
         </div>
         <div>
             <button type='button' id='userpage-load'>User Page</button>

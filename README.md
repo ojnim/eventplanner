@@ -84,6 +84,8 @@ event =
 
 6. Future Update Plan
 
+Design CSS Again
+
 Error and General Update
 
 consider edge cases
