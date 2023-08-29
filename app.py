@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 import hashlib
 import datetime
 import jwt
-from setup import GoogleCalendar
+from GoogleCalendarAPI import GoogleCalendar
 import googleapiclient
 
 app = Flask(__name__)
@@ -236,24 +236,24 @@ def calendar_create(eventcode):
             attendeeemail = attendeeinfo.get("email")
             attendees += [{'email':attendeeemail}]
         
+        timezone_offset = ":00.000"
+        
         event = {
             'summary': eventname,
             'location': eventlocation,
             'description': '',
-            'start': {'dateTime': start, 'timeZone': timezone},
-            'end': {'dateTime': end, 'timeZone': timezone},
+            'start': {'dateTime': start + timezone_offset, 'timeZone': timezone},
+            'end': {'dateTime': end + timezone_offset, 'timeZone': timezone},
             'attendees': attendees,
         }
-        print(event)
         
         google_calendar = GoogleCalendar()
         google_calendar.set_google_calendar(event)
         
-        eventID = event['id']
-        return jsonify({'result':'event created', 'gceventid':eventID})
+        return jsonify({'result':'event created'})
     
     except googleapiclient.errors.HttpError:
-        return jsonify({'result':'httperror'})
+        return jsonify({'result':'HttpError'})
 
 """
 @app.route('/event/<eventcode>/calendar', methods=['PUT'])
@@ -268,9 +268,11 @@ def calendar_update(eventcode):
 @app.route('/event/<eventcode>/calendar', methods=['DELETE'])
 def calendar_delete(eventcode):
     try:
-        service.events().delete(calendarId='primary', eventId='eventId').execute()
+        google_calendar = GoogleCalendar()
+        return jsonify({'result':'success'})
     except googleapiclient.errors.HttpError:
         print("Failed to delete event in google calendar")
+        return jsonify({'result':'HttpError'})
 #case: already deleted event in google calendar seperately, not in this web app
 
 if __name__=='__main__':
