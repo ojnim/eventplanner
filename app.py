@@ -6,7 +6,7 @@ from bson.objectid import ObjectId
 import hashlib
 import datetime
 import jwt
-from GoogleCalendar_setup import get_service
+from setup import GoogleCalendar
 import googleapiclient
 
 app = Flask(__name__)
@@ -170,11 +170,12 @@ def event_info(eventcode):
 @app.route('/event/<eventcode>/info2', methods=['GET'])
 #called in one page
 def view_event(eventcode):
-    eventdata2 = db.events.find_one({'_id':ObjectId(eventcode)},{'participants_list':True, 'location':True, 'checklist':True})
+    eventdata2 = db.events.find_one({'_id':ObjectId(eventcode)},{'participants_list':True, 'location':True, 'timezone':True,'checklist':True})
     participants = list(eventdata2.get('participants_list'))
     location = str(eventdata2.get('location'))
+    timezone = str(eventdata2.get('timezone'))
     checklist = list(eventdata2.get('checklist'))
-    return jsonify({'result':'success','participants':participants,'location':location, 'checklist':checklist})
+    return jsonify({'result':'success','participants':participants,'location':location,'eventtimezone':timezone,'checklist':checklist})
 
 #[checklist post api]
 @app.route('/event/<eventcode>/checklist', methods=['POST'])
@@ -219,36 +220,40 @@ def item_delete(eventcode):
 #[google calendar API]
 @app.route('/event/<eventcode>/calendar', methods=['POST'])
 def calendar_create(eventcode):
-    service = get_service()
-    eventinfo = db.events.find_one({'_id':ObjectId(eventcode)},{'_id':False})
-    participants = list(eventinfo.get('participants_list'))
-    attendees = []
-    start = eventinfo.get("start")
-    end = eventinfo.get("end")
-    timezone = eventinfo.get("timezone")
-    
-    timezoneoffset = ""
-    
-    for i in range(len(participants)):
-        attendeeemail = db.users.find_one({'_id':ObjectId(participants[i])},{'email':True})
-        attendees += [{'email':attendeeemail}]
+    try:
+        eventinfo = db.events.find_one({'_id':ObjectId(eventcode)},{'_id':False})
+        eventname = eventinfo.get('eventname')
+        eventlocation = eventinfo.get('location')
+        participants = list(eventinfo.get('participants_list'))
+        start = eventinfo.get("start")
+        end = eventinfo.get("end")
+        timezone = eventinfo.get("timezone")
 
-    event = {
-        'summary': eventinfo.get('eventname'),
-        'location': eventinfo.get('location'),
-        'description': '',
-        'start': {
-            'dateTime': start + timezoneoffset, 
-            'timeZone': timezone,
-        },
-        'end': {
-            'dateTime': end + timezoneoffset, 
-            'timeZone': timezone,
-        },
-        'attendees': attendees,
-    }
+        
+        attendees = []
+        for i in range(len(participants)):
+            attendeeinfo = db.users.find_one({'_id':ObjectId(participants[i])},{'email':True})
+            attendeeemail = attendeeinfo.get("email")
+            attendees += [{'email':attendeeemail}]
+        
+        event = {
+            'summary': eventname,
+            'location': eventlocation,
+            'description': '',
+            'start': {'dateTime': start, 'timeZone': timezone},
+            'end': {'dateTime': end, 'timeZone': timezone},
+            'attendees': attendees,
+        }
+        print(event)
+        
+        google_calendar = GoogleCalendar()
+        google_calendar.set_google_calendar(event)
+        
+        eventID = event['id']
+        return jsonify({'result':'event created', 'gceventid':eventID})
     
-    event = service.events().insert(calendarId='primary', body=event).execute()
+    except googleapiclient.errors.HttpError:
+        return jsonify({'result':'httperror'})
 
 """
 @app.route('/event/<eventcode>/calendar', methods=['PUT'])
@@ -262,7 +267,6 @@ def calendar_update(eventcode):
 
 @app.route('/event/<eventcode>/calendar', methods=['DELETE'])
 def calendar_delete(eventcode):
-    service = get_service()
     try:
         service.events().delete(calendarId='primary', eventId='eventId').execute()
     except googleapiclient.errors.HttpError:
@@ -271,17 +275,3 @@ def calendar_delete(eventcode):
 
 if __name__=='__main__':
     app.run('0.0.0.0', port=5000, debug = True)
-    
-
-"""
-#only user can access
-@app.route('/abcdefg', methods=['GET'])
-def api_valid():
-    token_receive = request.cookies.get('mytoken')
-    try:
-        payload = jwt.decode()
-    except jwt.ExpiredSignatureError:
-        return jsonify()
-    except jwt.exceptions.DecodeError:
-        return jsonify()
-"""
