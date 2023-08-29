@@ -15,7 +15,7 @@ class GoogleCalendar:
     
     def __init__(self):
         self.SCOPES = ['https://www.googleapis.com/auth/calendar']
-        self.file_path = "token.json" #might need to change
+        self.file_path = "token.json"
         self.service = None
     
     def renew_google_token(self):
@@ -31,7 +31,7 @@ class GoogleCalendar:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file('credentials.json', self.SCOPES)
-                creds = flow.run_local_server(port=0) #might need to change credentials.json name
+                creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
             with open(self.file_path, 'w') as token:
                 token.write(creds.to_json())

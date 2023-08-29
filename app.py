@@ -236,7 +236,7 @@ def calendar_create(eventcode):
             attendeeemail = attendeeinfo.get("email")
             attendees += [{'email':attendeeemail}]
         
-        timezone_offset = ":00.000"
+        timezone_offset = ":00.000" #date time value should be in UTC "TZ" format
         
         event = {
             'summary': eventname,
