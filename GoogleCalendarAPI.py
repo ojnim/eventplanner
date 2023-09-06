@@ -50,8 +50,4 @@ class GoogleCalendar:
         service = build('calendar', 'v3', credentials=creds)
         self.service = service
         self.service.events().insert(calendarId='primary', body=event).execute()
-    
-    def delete_event(self):
-        return self.service.events().delete(calendarId='primary').execute()
-    
 
