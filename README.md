@@ -6,7 +6,7 @@
 
         ├──app.py 
 
-        ├──GoogleCalendar_setup.py 
+        ├──GoogleCalendarAPI.py 
 
         ├──credentials.json 
 
@@ -72,7 +72,7 @@ event =
             
             "end":"", 
             
-            "checklist":[] }
+            "checklist":[]}
 
 
 
@@ -90,10 +90,12 @@ Error and General Update
 
 consider edge cases
 
-debug google calendar error
-
 
 Advanced Functions
+
+google Calendar API
+
+--> more detailed functions, such as update and delete
 
 google map API
 

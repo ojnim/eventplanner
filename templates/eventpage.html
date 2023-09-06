@@ -131,17 +131,6 @@
                 })
             }
 
-            function checklist_delete(){
-                $.ajax({
-                    type: 'DELETE',
-                    url: '/event/{{eventcode}}/checklist',
-                    data: {},
-                    success: function(response){
-                        console.log(response)
-                    }
-                })
-            }
-
             function google_calendar_create(){
                 //when create when update
                 $.ajax({
@@ -151,28 +140,6 @@
                     success: function(response){
                         console.log(response)
                     }
-                })
-            }
-
-            function google_calendar_update(){
-                //event date/time/timezone change
-                //location update
-                //user leave event
-                $.ajax({
-                    type: 'PUT',
-                    url: '/event/{{eventcode}}/calendar',
-                    data: {},
-                    success: function(response){}
-                })
-            }
-
-            function google_calendar_delete(){
-                //event delete
-                $.ajax({
-                    type: 'DELETE',
-                    url: '/event/{{eventcode}}/calendar',
-                    data: {},
-                    success: function(response){}
                 })
             }
 

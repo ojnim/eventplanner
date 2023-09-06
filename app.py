@@ -132,7 +132,7 @@ def newevent():
         'timezone':'',
         'start':'',
         'end':'',
-        'checklist':[]
+        'checklist':[],
     }
     db.events.insert_one(doc)
     return jsonify({'result':'success', 'eventcode':str(eventcode)})
@@ -201,20 +201,13 @@ def update_eventstartend(eventcode):
     #end update
     return jsonify({'result':'success'})
 
-    #add and delete event checklist
-"""
-@app.route('/event/<eventcode>/checklist', methods=['PUT'])
-def update_checklist():
-    
-    return jsonify()
-
 #[checklist item delete api]
 @app.route('/event/<eventcode>/checklist', methods=['DELETE'])
 def item_delete(eventcode):
     item_receive = request.form['item_give']
     db.events.update_one({'_id':ObjectId(eventcode)},{'$pull':{'checklist':item_receive}})
     return jsonify({'result':'success'})
-"""
+
 
 
 #[google calendar API]
@@ -255,25 +248,7 @@ def calendar_create(eventcode):
     except googleapiclient.errors.HttpError:
         return jsonify({'result':'HttpError'})
 
-"""
-@app.route('/event/<eventcode>/calendar', methods=['PUT'])
-def calendar_update(eventcode):
-    service = get_service()
-    update_receive = request.form['update_give']
-    event = service.events().get(calendarId='primary', eventId='eventId').execute()
-    event[''] = update_receive
-    updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
-"""
 
-@app.route('/event/<eventcode>/calendar', methods=['DELETE'])
-def calendar_delete(eventcode):
-    try:
-        google_calendar = GoogleCalendar()
-        return jsonify({'result':'success'})
-    except googleapiclient.errors.HttpError:
-        print("Failed to delete event in google calendar")
-        return jsonify({'result':'HttpError'})
-#case: already deleted event in google calendar seperately, not in this web app
 
 if __name__=='__main__':
     app.run('0.0.0.0', port=5000, debug = True)
